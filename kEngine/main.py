@@ -14,7 +14,7 @@ def xmlparsing(filename):
     # category
     xmlfile = os.path.join(path, filename)
     category = str(xmlfile.split('_')[-1]).split('.')[0].encode("cp437").decode("euc-kr")
-    jsonfile = '{}/ok/{}.json'.format(zipper.zipper.jsonpath, category)
+    jsonfile = '{}/{}.json'.format(zipper.zipper.jsonpath, category)
     # if os.path.isfile(jsonfile):
     #     os.remove(xmlfile)
     #     return False, None
