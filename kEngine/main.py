@@ -2,6 +2,7 @@ from kZipfile import zipper
 from kEngine import crawler
 import xml.etree.ElementTree as et
 import os
+import shutil
 import json
 from dexterlog import klogger
 
@@ -13,7 +14,10 @@ def xmlparsing(filename):
     # category
     xmlfile = os.path.join(path, filename)
     category = str(xmlfile.split('_')[-1]).split('.')[0].encode("cp437").decode("euc-kr")
-    if os.path.isfile('{}/ok/{}.json'.format(zipper.zipper.jsonpath, category)): return False, None
+    jsonfile = '{}/ok/{}.json'.format(zipper.zipper.jsonpath, category)
+    # if os.path.isfile(jsonfile):
+    #     os.remove(xmlfile)
+    #     return False, None
 
     # xml root
     tree = et.parse(xmlfile)
@@ -46,22 +50,29 @@ def xmlparsing(filename):
     f.close() 
     '''
 
-    with open('{}/ok/{}.json'.format(zipper.zipper.jsonpath, category), 'w', encoding='utf-8') as f:
+    with open(jsonfile, 'w', encoding='utf-8') as f:
         f.write(json.dumps(row_list, ensure_ascii=False))
     f.close()
+    os.remove(jsonfile)
     os.remove(xmlfile)
 
     return True, row_list
 
 
 if __name__ == '__main__':
-    # xml 파일 다운로드
-    ret = False
-    while not ret:
-        ret = crawler.download(crawler.URL.localdata, zipper.zipper.zpath + '/' + zipper.zipper.zmon)
+    for path, dir, files in os.walk(zipper.zipper.uzpath):
+        if 0 == len(files):  # 실패 이력 없을 경우
+            # xml 파일 다운로드
+            ret = False
+            while not ret:
+                ret = crawler.download(crawler.URL.localdata, os.path.join(zipper.zipper.zpath, zipper.zipper.zmon))
 
-    # xml 파일 압축 풀기
-    zipper.zipper.unzip(period='month')
+            # xml 파일 압축 풀기
+            zipper.zipper.unzip(period='month')
+
+            # xml 압축파일 백업
+            shutil.move(os.path.join(zipper.zipper.zpath, zipper.zipper.zmon),
+                        os.path.join(zipper.zipper.backupzpath, zipper.zipper.backupzmon))
 
     # xml parsing
     for path, dir, files in os.walk(zipper.zipper.uzpath):
@@ -70,3 +81,5 @@ if __name__ == '__main__':
             if ret:
                 for row in rows:
                     print(row)
+
+

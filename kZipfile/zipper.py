@@ -1,15 +1,30 @@
 import zipfile
 import os
+import datetime
+from kSecret.config import config
 
 
 class Zipper:
     def __init__(self):
-        self.root = 'C:/임시/_KDATA'
-        self.zpath = 'C:/임시/_KDATA/kZipfile/zip'
-        self.uzpath = 'C:/임시/_KDATA/kZipfile/unzip'
-        self.jsonpath = 'C:/임시/_KDATA/kZipfile/localdata_json'
+        self.root = config['root']
+        self.zpath = self.root + 'kZipfile/zip'
+        self.backupzpath = self.root + 'kZipfile/zip/backup'
+        self.uzpath = self.root + 'kZipfile/unzip'
+        self.jsonpath = self.root + 'kZipfile/localdata_json'
         self.zall = 'LOCALDATA_ALL_XML.zip'
         self.zmon = 'LOCALDATA_NOWMON_XML.zip'
+        self.backupzmon = 'LOCALDATA_NOWMON_XML_{}.zip'.format(datetime.date.today())
+
+        if not os.path.isdir(self.root):
+            os.mkdir(self.root)
+        if not os.path.isdir(self.zpath):
+            os.mkdir(self.zpath)
+        if not os.path.isdir(self.backupzpath):
+            os.mkdir(self.backupzpath)
+        if not os.path.isdir(self.uzpath):
+            os.mkdir(self.uzpath)
+        if not os.path.isdir(self.jsonpath):
+            os.mkdir(self.jsonpath)
 
     def unzip(self, period='month'):
         if 'month' == period: file = self.zmon
