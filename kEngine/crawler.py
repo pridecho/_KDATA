@@ -24,14 +24,21 @@ def download(url, file_name=None):
         return False
 
 # 종승 서버로 전송
-def transfer_localdata(url=None, data=None):  # post data 는 list 로 받자.
-    # post
-    url = url
-    headers = {'Content-Type': 'applicatioin/json'}
-    payload = "{\"request_code\": \"" + str(uuid.uuid1()) + "\"," \
-              "\r\n     \"data\": " + json.dumps(data, ensure_ascii = False) + "\r\n}"
+def transfer_localdata(url=None, data=None, payload=None):  # post data 는 list 로 받자.
+    try:
+        # post
+        url = url
+        headers = {'Content-Type': 'applicatioin/json'}
+        if payload is None:
+            payload = "{\"request_code\": \"" + str(uuid.uuid1()) + "\", " \
+                      "\"data\": " + json.dumps(data, ensure_ascii = False) + "}"
 
-    rs = requests.post(url=url, headers=headers, data=payload)
-    ct = rs.json()
+        rs = requests.post(url=url, headers=headers, data=payload)
+        ct = rs.json()
 
-    return ct
+        return ct, payload
+
+    except Exception as e:
+        print(e.args)
+        return '9999', payload
+

@@ -12,10 +12,10 @@ def xmlparsing(filename):
     # localdata_cols_list = []
     # localdata_cols_dict = {}
 
-    # category
     xmlfile = os.path.join(path, filename)
-    category = str(xmlfile.split('_')[-1]).split('.')[0].encode("cp437").decode("euc-kr")
-    jsonfile = '{}/{}.json'.format(zipper.zipper.jsonpath, category)
+    # category
+    #     # category = str(xmlfile.split('_')[-1]).split('.')[0].encode("cp437").decode("euc-kr")
+    #     # jsonfile = '{}/{}.json'.format(zipper.zipper.jsonpath, category)
     # if os.path.isfile(jsonfile):
     #     os.remove(xmlfile)
     #     return False, None
@@ -61,10 +61,10 @@ def xmlparsing(filename):
     f.close() 
     '''
 
-    with open(jsonfile, 'w', encoding='utf-8') as f:
-        f.write(json.dumps(row_common_list, ensure_ascii=False))
-    f.close()
-    os.remove(jsonfile)
+    # with open(jsonfile, 'w', encoding='utf-8') as f:
+    #     f.write(json.dumps(row_common_list, ensure_ascii=False))
+    # f.close()
+    # os.remove(jsonfile)
     os.remove(xmlfile)
 
     return True, row_common_list
@@ -91,7 +91,13 @@ if __name__ == '__main__':
             ret, rows = xmlparsing(file)
             if ret:
                 for row in rows:
-                    print(row)
-                    # crawler.transfer_localdata(crawler.URL.gomtang, row)
+                    ret, payload = crawler.transfer_localdata(crawler.URL.gomtang, row, payload=None)
+                    if '9999' == ret:
+                        ng_payload = '{}/{}_{}.json'.format(zipper.zipper.jsonpath, row["opnSvcNm"], row["rowNum"])
+                        with open(ng_payload, 'w', encoding='utf-8') as f:
+                            f.write(payload)
+                        f.close()
+                    else:
+                        print(ret)
 
 
