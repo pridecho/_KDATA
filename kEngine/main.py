@@ -4,6 +4,7 @@ import xml.etree.ElementTree as et
 import os
 import shutil
 import json
+import hashlib
 from dexterlog import klogger
 
 
@@ -33,14 +34,24 @@ def xmlparsing(filename):
     count = int(root.find('header/paging/totalCount').text)
 
     # row list
-    row_list = []
+    row_common_list = []
     rows = root.findall('body/rows/row')
     for row in rows:
-        row_dict = {}
+        row_common_dict = {}
+        row_unique_dict = {}
+        common_flag = True
         for ro in row:
-            if 'rowNum' == ro.tag: continue
-            row_dict[ro.tag] = ro.text
-        row_list.append(row_dict)
+            if common_flag:
+                row_common_dict[ro.tag] = ro.text
+            else:
+                row_unique_dict[ro.tag] = ro.text
+            if 'y' == ro.tag: common_flag = False
+
+        row_common_dict["items"] = json.dumps(row_unique_dict, ensure_ascii=False)
+        hash = hashlib.md5(json.dumps(row_common_dict, sort_keys=True).encode('utf-8')).hexdigest()
+        row_common_dict["data_hash"] = hash
+
+        row_common_list.append(row_common_dict)
 
     ''' column name
     localdata_cols_dict[category] = col_list
@@ -51,12 +62,12 @@ def xmlparsing(filename):
     '''
 
     with open(jsonfile, 'w', encoding='utf-8') as f:
-        f.write(json.dumps(row_list, ensure_ascii=False))
+        f.write(json.dumps(row_common_list, ensure_ascii=False))
     f.close()
     os.remove(jsonfile)
     os.remove(xmlfile)
 
-    return True, row_list
+    return True, row_common_list
 
 
 if __name__ == '__main__':
@@ -81,5 +92,6 @@ if __name__ == '__main__':
             if ret:
                 for row in rows:
                     print(row)
+                    # crawler.transfer_localdata(crawler.URL.gomtang, row)
 
 
