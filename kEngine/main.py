@@ -2,13 +2,16 @@ from kZipfile import zipper
 from kEngine import crawler
 import xml.etree.ElementTree as et
 import os
+import time
 import shutil
 import json
 import hashlib
+import inflection
+import schedule
 from dexterlog import klogger
 
 
-def xmlparsing(filename):
+def xmlparsing(path, filename):
     # localdata_cols_list = []
     # localdata_cols_dict = {}
 
@@ -41,11 +44,18 @@ def xmlparsing(filename):
         row_unique_dict = {}
         common_flag = True
         for ro in row:
+            # camel to snake
+            key = inflection.underscore(ro.tag)
+
+            # None to blank
+            if ro.text is not None: value = ro.text
+            else: value = ""
+
             if common_flag:
-                row_common_dict[ro.tag] = ro.text
+                row_common_dict[key] = value
             else:
-                row_unique_dict[ro.tag] = ro.text
-            if 'y' == ro.tag: common_flag = False
+                row_unique_dict[key] = value
+            if 'y' == key: common_flag = False
 
         row_common_dict["items"] = json.dumps(row_unique_dict, ensure_ascii=False)
         hash = hashlib.md5(json.dumps(row_common_dict, sort_keys=True).encode('utf-8')).hexdigest()
@@ -70,7 +80,7 @@ def xmlparsing(filename):
     return True, row_common_list
 
 
-if __name__ == '__main__':
+def run():
     for path, dir, files in os.walk(zipper.zipper.uzpath):
         if 0 == len(files):  # 실패 이력 없을 경우
             # xml 파일 다운로드
@@ -88,16 +98,24 @@ if __name__ == '__main__':
     # xml parsing
     for path, dir, files in os.walk(zipper.zipper.uzpath):
         for file in files:
-            ret, rows = xmlparsing(file)
+            ret, rows = xmlparsing(path, file)
             if ret:
                 for row in rows:
                     ret, payload = crawler.transfer_localdata(crawler.URL.gomtang, row, payload=None)
                     if '9999' == ret:
-                        ng_payload = '{}/{}_{}.json'.format(zipper.zipper.jsonpath, row["opnSvcNm"], row["rowNum"])
+                        ng_payload = '{}/{}_{}.json'.format(zipper.zipper.jsonpath, row["opn_svc_nm"], row["row_num"])
                         with open(ng_payload, 'w', encoding='utf-8') as f:
                             f.write(payload)
                         f.close()
                     else:
-                        print(ret)
+                        klogger('rest_ok').info('{}_{}'.format(row["opn_svc_nm"], row["row_num"]))
+                        klogger('rest_ok').info('status : {}'.format(ret['status']))
+                        klogger('rest_ok').info('message : {}'.format(ret['message']))
 
 
+if __name__ == '__main__':
+    # run()
+    schedule.every().day.at("18:00").do(run)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)

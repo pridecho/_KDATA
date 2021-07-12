@@ -1,6 +1,7 @@
 import logging.handlers
 import os
 import datetime
+from kSecret import config
 
 '''
 logging.DEBUG   : win32evtlog.EVENTLOG_INFORMATION_TYPE,
@@ -29,7 +30,7 @@ def createfile(foldername, filename):
 
 def klogger(filename):
     # 초기화
-    foldername = 'c:/임시/_CAT/log/'
+    foldername = config.config['root'] + 'kLog/'
     looooger = logging.getLogger(filename)
     looooger.setLevel(logging.DEBUG)
 
